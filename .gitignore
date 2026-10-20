@@ -37,3 +37,6 @@ Thumbs.db
 
 # Claude Code の個人設定（共有する設定は .claude/settings.json に置く）
 .claude/settings.local.json
+
+# Claude Code 用のプロジェクト指示（個人用なので追跡しない）
+CLAUDE.md
