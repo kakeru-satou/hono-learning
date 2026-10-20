@@ -1,0 +1,39 @@
+# リポジトリ全体に効く設定（サブフォルダの .gitignore と併用）
+
+# 依存パッケージ
+node_modules/
+
+# ビルド出力（tsc / Vite / Next.js）
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# 環境変数（秘密情報）。サンプルだけは追跡する
+.env
+.env.*
+!.env.example
+
+# ローカルDB（SQLite など）
+*.db
+*.sqlite
+*.sqlite3
+
+# テスト・カバレッジ
+coverage/
+
+# ログ
+logs/
+*.log
+
+# エディタ・OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code の個人設定（共有する設定は .claude/settings.json に置く）
+.claude/settings.local.json
