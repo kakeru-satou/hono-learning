@@ -7,6 +7,12 @@ import "./App.css";
 function App() {
   const [count, setCount] = useState(0);
 
+  // fetch("http://localhost:4000/api/todos", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ name: "test" }),
+  // });
+
   return (
     <>
       <section id="center">

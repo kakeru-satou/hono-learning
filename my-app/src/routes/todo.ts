@@ -1,6 +1,7 @@
 import { Hono } from "hono";
+import type { AppEnv } from "../type.js";
 
-const todoApp = new Hono();
+export const todoApp = new Hono<AppEnv>();
 
 type TodoType = {
   id: number;
@@ -17,6 +18,8 @@ const getNextID = createAutoIncrement();
 
 todoApp.get("/:id", (c) => {
   const id = Number(c.req.param("id"));
+  const requestID = c.get("requestId");
+  console.log(requestID);
   if (Number.isNaN(id)) {
     return c.json({}, 400);
   }
@@ -45,4 +48,4 @@ todoApp.post("/", async (c) => {
   return c.json(createdTodo, 201);
 });
 
-export { todoApp };
+// export { todoApp };

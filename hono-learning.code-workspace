@@ -24,6 +24,7 @@
       "editor.defaultFormatter": "biomejs.biome"
     },
     "editor.formatOnSave": true,
+    "files.eol": "\n",
     "editor.codeActionsOnSave": {
       "source.organizeImports.biome": "explicit"
     },
