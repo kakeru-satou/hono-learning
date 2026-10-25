@@ -1,12 +1,18 @@
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { z } from "zod";
+import {
+  createTodoSchema,
+  getTodoSchema,
+  getTodosSchema,
+  type todoSchema,
+} from "../shared/schema.js";
+import { validationHook } from "../shared/validation.js";
 import type { AppEnv } from "../type.js";
 
 export const todoApp = new Hono<AppEnv>();
 
-type TodoType = {
-  id: number;
-  name: string;
-};
+type TodoType = z.infer<typeof todoSchema>;
 
 function createAutoIncrement(start: number = 1) {
   let current = start;
@@ -16,13 +22,10 @@ function createAutoIncrement(start: number = 1) {
 const todos: TodoType[] = [];
 const getNextID = createAutoIncrement();
 
-todoApp.get("/:id", (c) => {
-  const id = Number(c.req.param("id"));
+todoApp.get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
+  const { id } = c.req.valid("param");
   const requestID = c.get("requestId");
   console.log(requestID);
-  if (Number.isNaN(id)) {
-    return c.json({}, 400);
-  }
   const foundTodo = todos.find((t) => t.id === id);
   if (foundTodo === undefined) {
     return c.json({}, 404);
@@ -30,8 +33,8 @@ todoApp.get("/:id", (c) => {
   return c.json(foundTodo);
 });
 
-todoApp.get("/", (c) => {
-  const name = c.req.query("name");
+todoApp.get("/", zValidator("query", getTodosSchema, validationHook), (c) => {
+  const { name } = c.req.valid("query");
   if (name === undefined) {
     return c.json(todos);
   }
@@ -39,13 +42,11 @@ todoApp.get("/", (c) => {
   return c.json(foundTodos);
 });
 
-todoApp.post("/", async (c) => {
-  const { name } = await c.req.json<{ name: string }>();
+todoApp.post("/", zValidator("json", createTodoSchema, validationHook), (c) => {
+  const { name } = c.req.valid("json");
   const createdTodo: TodoType = { id: getNextID(), name };
 
   todos.push(createdTodo);
 
   return c.json(createdTodo, 201);
 });
-
-// export { todoApp };
