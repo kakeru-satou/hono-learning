@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { z } from "zod";
+import { CustomError } from "../shared/exception.js";
 import {
   createTodoSchema,
   getTodoSchema,
@@ -24,11 +25,9 @@ const getNextID = createAutoIncrement();
 
 todoApp.get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
   const { id } = c.req.valid("param");
-  const requestID = c.get("requestId");
-  console.log(requestID);
   const foundTodo = todos.find((t) => t.id === id);
   if (foundTodo === undefined) {
-    return c.json({}, 404);
+    throw new CustomError(404, "todoが見つかりませんでした");
   }
   return c.json(foundTodo);
 });
