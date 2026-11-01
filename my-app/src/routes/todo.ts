@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { z } from "zod";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 import { CustomError } from "../shared/exception.js";
 import {
   createTodoSchema,
@@ -12,6 +13,7 @@ import { validationHook } from "../shared/validation.js";
 import type { AppEnv } from "../type.js";
 
 export const todoApp = new Hono<AppEnv>();
+todoApp.use(authMiddleware);
 
 type TodoType = z.infer<typeof todoSchema>;
 

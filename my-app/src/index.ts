@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { idMiddleware, timeMiddleware } from "./middleware/request-tracking.js";
+import { authApp } from "./routes/auth.js";
 import { todoApp } from "./routes/todo.js";
 import { CustomError } from "./shared/exception.js";
 import type { AppEnv } from "./type.js";
@@ -30,6 +31,7 @@ app.use(
 );
 
 app.route("/api/todos", todoApp);
+app.route("/api/auth", authApp);
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
