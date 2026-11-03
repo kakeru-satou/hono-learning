@@ -9,45 +9,45 @@ import {
   getTodosSchema,
   type todoSchema,
 } from "../shared/schema.js";
+import { createAutoIncrement } from "../shared/util.js";
 import { validationHook } from "../shared/validation.js";
 import type { AppEnv } from "../type.js";
 
-export const todoApp = new Hono<AppEnv>();
-todoApp.use(authMiddleware);
-
 type TodoType = z.infer<typeof todoSchema>;
 
-function createAutoIncrement(start: number = 1) {
-  let current = start;
-  return () => current++;
+export function createTodoApp() {
+  const todoApp = new Hono<AppEnv>();
+  todoApp.use(authMiddleware);
+
+  const todos: TodoType[] = [];
+  const getNextID = createAutoIncrement();
+
+  todoApp.get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
+    const { id } = c.req.valid("param");
+    const foundTodo = todos.find((t) => t.id === id);
+    if (foundTodo === undefined) {
+      throw new CustomError(404, "todoが見つかりませんでした");
+    }
+    return c.json(foundTodo);
+  });
+
+  todoApp.get("/", zValidator("query", getTodosSchema, validationHook), (c) => {
+    const { name } = c.req.valid("query");
+    if (name === undefined) {
+      return c.json(todos);
+    }
+    const foundTodos = todos.filter((value) => value.name.includes(name));
+    return c.json(foundTodos);
+  });
+
+  todoApp.post("/", zValidator("json", createTodoSchema, validationHook), (c) => {
+    const { name } = c.req.valid("json");
+    const createdTodo: TodoType = { id: getNextID(), name };
+
+    todos.push(createdTodo);
+
+    return c.json(createdTodo, 201);
+  });
+
+  return todoApp;
 }
-
-const todos: TodoType[] = [];
-const getNextID = createAutoIncrement();
-
-todoApp.get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
-  const { id } = c.req.valid("param");
-  const foundTodo = todos.find((t) => t.id === id);
-  if (foundTodo === undefined) {
-    throw new CustomError(404, "todoが見つかりませんでした");
-  }
-  return c.json(foundTodo);
-});
-
-todoApp.get("/", zValidator("query", getTodosSchema, validationHook), (c) => {
-  const { name } = c.req.valid("query");
-  if (name === undefined) {
-    return c.json(todos);
-  }
-  const foundTodos = todos.filter((value) => value.name.includes(name));
-  return c.json(foundTodos);
-});
-
-todoApp.post("/", zValidator("json", createTodoSchema, validationHook), (c) => {
-  const { name } = c.req.valid("json");
-  const createdTodo: TodoType = { id: getNextID(), name };
-
-  todos.push(createdTodo);
-
-  return c.json(createdTodo, 201);
-});
