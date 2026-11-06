@@ -55,55 +55,52 @@ export function createAuthApp(saltRounds: number) {
     return dummy;
   }
 
-  authApp.post("/register", zValidator("json", createUserSchema, validationHook), async (c) => {
-    const { name, email, password } = c.req.valid("json");
-    const foundUser = users.find((u) => u.email === email);
-    if (foundUser !== undefined) {
-      throw new CustomError(409, "このメールアドレスは既に使用されています");
-    }
-    const hashPassword = await bcrypt.hash(password, saltRounds);
-    const createdUser: UserType = { id: getNextID(), name, email, password: hashPassword };
+  return authApp
+    .post("/register", zValidator("json", createUserSchema, validationHook), async (c) => {
+      const { name, email, password } = c.req.valid("json");
+      const foundUser = users.find((u) => u.email === email);
+      if (foundUser !== undefined) {
+        throw new CustomError(409, "このメールアドレスは既に使用されています");
+      }
+      const hashPassword = await bcrypt.hash(password, saltRounds);
+      const createdUser: UserType = { id: getNextID(), name, email, password: hashPassword };
 
-    const token = await createToken(createdUser.id);
-    setAuthCookie(c, token);
+      const token = await createToken(createdUser.id);
+      setAuthCookie(c, token);
 
-    users.push(createdUser);
+      users.push(createdUser);
 
-    const responseUser: ResponseUserType = {
-      id: createdUser.id,
-      name: createdUser.name,
-    };
+      const responseUser: ResponseUserType = {
+        id: createdUser.id,
+        name: createdUser.name,
+      };
 
-    return c.json(responseUser, 201);
-  });
+      return c.json(responseUser, 201);
+    })
+    .post("/login", zValidator("json", loginUserSchema, validationHook), async (c) => {
+      const { email, password } = c.req.valid("json");
+      const foundUser = users.find((u) => u.email === email);
 
-  authApp.post("/login", zValidator("json", loginUserSchema, validationHook), async (c) => {
-    const { email, password } = c.req.valid("json");
-    const foundUser = users.find((u) => u.email === email);
+      const isMatch = await bcrypt.compare(password, foundUser?.password ?? dummy);
+      if (!isMatch || foundUser === undefined) {
+        throw new CustomError(401, "メールアドレス、またはパスワードが違います");
+      }
 
-    const isMatch = await bcrypt.compare(password, foundUser?.password ?? dummy);
-    if (!isMatch || foundUser === undefined) {
-      throw new CustomError(401, "メールアドレス、またはパスワードが違います");
-    }
+      const token = await createToken(foundUser.id);
+      setAuthCookie(c, token);
 
-    const token = await createToken(foundUser.id);
-    setAuthCookie(c, token);
+      const responseUser: ResponseUserType = {
+        id: foundUser.id,
+        name: foundUser.name,
+      };
 
-    const responseUser: ResponseUserType = {
-      id: foundUser.id,
-      name: foundUser.name,
-    };
+      return c.json(responseUser, 200);
+    })
+    .post("/logout", (c) => {
+      deleteCookie(c, ACCESS_TOKEN_COOKIE_NAME, {
+        path: "/",
+      });
 
-    return c.json(responseUser, 200);
-  });
-
-  authApp.post("/logout", (c) => {
-    deleteCookie(c, ACCESS_TOKEN_COOKIE_NAME, {
-      path: "/",
+      return c.json({ message: "ログアウトされました" }, 200);
     });
-
-    return c.json({ message: "ログアウトされました" }, 200);
-  });
-
-  return authApp;
 }

@@ -1,11 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import heroImg from "./assets/hero.png";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
+import { client } from "./lib/client";
 import "./App.css";
 
 function App() {
   const [count, setCount] = useState(0);
+  useEffect(() => {
+    // const fetchHelloHono = async () => {
+    //   const res = await client.index.$get();
+    //   const data = await res.text();
+
+    //   console.log(data);
+    // };
+
+    // void fetchHelloHono();
+    const fetchLogin = async () => {
+      const res = await client.api.auth.login.$post({
+        json: {
+          email: "taro@example.com",
+          password: "password123",
+        },
+      });
+      if (res.status !== 200) {
+        console.error("ログインに失敗");
+        return;
+      }
+
+      const todoRes = await client.api.todos.$get({ query: {} });
+      console.log(await todoRes.json());
+    };
+
+    void fetchLogin();
+  }, []);
 
   // fetch("http://localhost:4000/api/todos", {
   //   method: "POST",

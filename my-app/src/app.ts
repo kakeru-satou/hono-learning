@@ -24,18 +24,12 @@ export function createApp(saltRounds: number = 10) {
   app.use(timeMiddleware);
 
   app.use(
-    "/api/*",
+    "/*",
     cors({
-      origin: "http://localhost:3000",
+      origin: ["http://localhost:3000"],
+      credentials: true,
     }),
   );
-
-  app.route("/api/todos", createTodoApp());
-  app.route("/api/auth", createAuthApp(saltRounds));
-
-  app.get("/", (c) => {
-    return c.text("Hello Hono!");
-  });
 
   app.onError((err, c) => {
     let status: ContentfulStatusCode;
@@ -119,5 +113,12 @@ export function createApp(saltRounds: number = 10) {
     );
   });
 
-  return app;
+  return app
+    .route("/api/todos", createTodoApp())
+    .route("/api/auth", createAuthApp(saltRounds))
+    .get("/", (c) => {
+      return c.text("Hello Hono!");
+    });
 }
+
+export type AppType = ReturnType<typeof createApp>;

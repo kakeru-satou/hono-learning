@@ -22,32 +22,29 @@ export function createTodoApp() {
   const todos: TodoType[] = [];
   const getNextID = createAutoIncrement();
 
-  todoApp.get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
-    const { id } = c.req.valid("param");
-    const foundTodo = todos.find((t) => t.id === id);
-    if (foundTodo === undefined) {
-      throw new CustomError(404, "todoが見つかりませんでした");
-    }
-    return c.json(foundTodo);
-  });
+  return todoApp
+    .get("/:id", zValidator("param", getTodoSchema, validationHook), (c) => {
+      const { id } = c.req.valid("param");
+      const foundTodo = todos.find((t) => t.id === id);
+      if (foundTodo === undefined) {
+        throw new CustomError(404, "todoが見つかりませんでした");
+      }
+      return c.json(foundTodo);
+    })
+    .get("/", zValidator("query", getTodosSchema, validationHook), (c) => {
+      const { name } = c.req.valid("query");
+      if (name === undefined) {
+        return c.json(todos);
+      }
+      const foundTodos = todos.filter((value) => value.name.includes(name));
+      return c.json(foundTodos);
+    })
+    .post("/", zValidator("json", createTodoSchema, validationHook), (c) => {
+      const { name } = c.req.valid("json");
+      const createdTodo: TodoType = { id: getNextID(), name };
 
-  todoApp.get("/", zValidator("query", getTodosSchema, validationHook), (c) => {
-    const { name } = c.req.valid("query");
-    if (name === undefined) {
-      return c.json(todos);
-    }
-    const foundTodos = todos.filter((value) => value.name.includes(name));
-    return c.json(foundTodos);
-  });
+      todos.push(createdTodo);
 
-  todoApp.post("/", zValidator("json", createTodoSchema, validationHook), (c) => {
-    const { name } = c.req.valid("json");
-    const createdTodo: TodoType = { id: getNextID(), name };
-
-    todos.push(createdTodo);
-
-    return c.json(createdTodo, 201);
-  });
-
-  return todoApp;
+      return c.json(createdTodo, 201);
+    });
 }
